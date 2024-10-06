@@ -38,16 +38,14 @@ func getParticipants(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, participants)
 }
 
-// adds an album from JSON received in the request body.
+// adds a participant from JSON received in the request body.
 func postParticipants(c *gin.Context) {
 	var newParticipant types.Participant
 
-	// Call BindJSON to bind the received JSON to newAlbum.
 	if err := c.BindJSON(&newParticipant); err != nil {
 		return
 	}
 
-	// Add the new album to the slice.
 	participants = append(participants, newParticipant)
 	c.IndentedJSON(http.StatusCreated, newParticipant)
 }
