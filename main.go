@@ -35,7 +35,7 @@ func main() {
 // responds list of all participants as JSON.
 func getParticipants(c *gin.Context) {
 
-	c.IndentedJSON(http.StatusOK, participants)
+	c.JSON(http.StatusOK, participants)
 }
 
 // adds a participant from JSON received in the request body.
@@ -47,7 +47,7 @@ func postParticipants(c *gin.Context) {
 	}
 
 	participants = append(participants, newParticipant)
-	c.IndentedJSON(http.StatusCreated, newParticipant)
+	c.JSON(http.StatusCreated, newParticipant)
 }
 
 // locates the participant whose ParticipantID value matches the id
@@ -56,9 +56,9 @@ func getParticipantByID(c *gin.Context) {
 
 	for _, a := range participants {
 		if a.ParticipantID == participantID {
-			c.IndentedJSON(http.StatusOK, a)
+			c.JSON(http.StatusOK, a)
 			return
 		}
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Participant could not be found"})
+	c.JSON(http.StatusNotFound, gin.H{"message": "Participant could not be found"})
 }
