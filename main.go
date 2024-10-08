@@ -3,23 +3,14 @@ package main
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/ajitdusane/web-service-gin/app_config"
 
 	"github.com/case-framework/case-backend/pkg/study/types"
 
+	"github.com/gin-gonic/gin"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	"gopkg.in/yaml.v3"
-
-	"os"
 )
-
-type Config struct {
-	Server struct {
-		Host string `yaml:"host"`
-		Port string `yaml:"port"`
-	}
-}
 
 var participants = []types.Participant{
 	{
@@ -36,26 +27,12 @@ var participants = []types.Participant{
 }
 
 func main() {
-
-	// read the config.yaml file
-	data, err := os.ReadFile("config.yml")
-
-	if err != nil {
-		panic(err)
-	}
-
-	// create a config struct and deserialize the data into that struct
-	var config Config
-
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		panic(err)
-	}
-
+	app_config.ReadConfig()
 	router := gin.Default()
 	router.GET("/participants", getParticipants)
 	router.GET("/participants/:id", getParticipantByID)
 	router.POST("/participants", postParticipants)
-	router.Run(config.Server.Host + ":" + config.Server.Port)
+	router.Run(app_config.AppConfig.Server.Host + ":" + app_config.AppConfig.Server.Port)
 }
 
 // responds list of all participants as JSON.

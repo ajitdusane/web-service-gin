@@ -1,4 +1,4 @@
 # server config
 server:
-  host: 127.0.0.1a
-  port: 8080a
+  host: localhost
+  port: 8080
