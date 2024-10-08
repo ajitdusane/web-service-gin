@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 
+	"log/slog"
+
 	"github.com/ajitdusane/web-service-gin/app_config"
 
 	"github.com/case-framework/case-backend/pkg/study/types"
@@ -32,6 +34,7 @@ func main() {
 	router.GET("/participants", getParticipants)
 	router.GET("/participants/:id", getParticipantByID)
 	router.POST("/participants", postParticipants)
+	slog.Info("starting server " + app_config.AppConfig.Server.Host + " at port " + app_config.AppConfig.Server.Port)
 	router.Run(app_config.AppConfig.Server.Host + ":" + app_config.AppConfig.Server.Port)
 }
 

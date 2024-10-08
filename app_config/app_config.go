@@ -1,6 +1,8 @@
 package app_config
 
 import (
+	"log/slog"
+
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -21,12 +23,13 @@ var AppConfig Config
 func ReadConfig() {
 	// read the config.yaml file
 	data, err := os.ReadFile(configPath)
+	slog.Info("read " + configPath + " file successfully")
 
 	if err != nil {
-		panic(err)
+		slog.Error(configPath+"could not be read correctly.", slog.String("error", err.Error()))
 	}
 
 	if err := yaml.Unmarshal(data, &AppConfig); err != nil {
-		panic(err)
+		slog.Error("unexpected error", slog.String("error", err.Error()))
 	}
 }
