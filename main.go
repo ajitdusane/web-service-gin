@@ -11,25 +11,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"encoding/json"
 )
 
-var participants = []types.Participant{
-	{
-		ID:                  primitive.NewObjectID(),
-		ParticipantID:       "P1",
-		CurrentStudySession: "CSS1",
-		EnteredAt:           11,
-		StudyStatus:         "SS11",
-		Flags:               make(map[string]string),
-		AssignedSurveys:     []types.AssignedSurvey{},
-		LastSubmissions:     make(map[string]int64),
-		Messages:            []types.ParticipantMessage{},
-	},
+var Participants = []types.Participant{}
+
+func init() {
+	app_config.ReadConfig()
 }
 
 func main() {
-	app_config.ReadConfig()
+
 	router := gin.Default()
 	router.GET("/participants", getParticipants)
 	router.GET("/participants/:id", getParticipantByID)
@@ -38,33 +30,53 @@ func main() {
 	router.Run(app_config.AppConfig.Server.Host + ":" + app_config.AppConfig.Server.Port)
 }
 
-// responds list of all participants as JSON.
+// responds list of all participants as JSON. i.e. by reading all json files inside a directory (see path in config.yml)
 func getParticipants(c *gin.Context) {
 
-	c.JSON(http.StatusOK, participants)
+	ReadParticipants()
+
+	if len(Participants) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "Participants not defined"})
+		return
+	}
+
+	c.JSON(http.StatusOK, Participants)
 }
 
-// adds a participant from JSON received in the request body.
+// adds a participant from JSON received in the request body and puts it inside a directory (see path in config.yml) as a .json file
 func postParticipants(c *gin.Context) {
 	var newParticipant types.Participant
 
 	if err := c.BindJSON(&newParticipant); err != nil {
+		slog.Error("error parsing json received in the request body.")
+		c.JSON(http.StatusAlreadyReported, gin.H{"message": "unexpected error occured"})
 		return
 	}
 
-	participants = append(participants, newParticipant)
+	if ParticipantExists(newParticipant.ParticipantID + ".json") {
+		c.JSON(http.StatusAlreadyReported, gin.H{"message": "Participant already exists."})
+		return
+	}
+
+	WriteParticipantToFile(newParticipant)
 	c.JSON(http.StatusCreated, newParticipant)
 }
 
 // locates the participant whose ParticipantID value matches the id
 func getParticipantByID(c *gin.Context) {
 	participantID := c.Param("id")
+	participantFileName := participantID + ".json"
 
-	for _, a := range participants {
-		if a.ParticipantID == participantID {
-			c.JSON(http.StatusOK, a)
-			return
-		}
+	if !ParticipantExists(participantFileName) {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Participant could not be found"})
+		return
 	}
-	c.JSON(http.StatusNotFound, gin.H{"message": "Participant could not be found"})
+
+	var participant types.Participant
+	if json.Unmarshal(ReadParticipantAsJson(participantFileName), &participant) != nil {
+		slog.Error("error while converting json to Participant struct")
+		c.JSON(http.StatusNotFound, gin.H{"message": "Participant could not be loaded"})
+		return
+	}
+	c.JSON(http.StatusOK, participant)
 }
